@@ -49,11 +49,43 @@ export default function Page() {
   const isValid = username.trim().length >= 3;
   const inProgress = stepIdx >= 0;
 
+  const resetToStart = useCallback(() => {
+    setPlatform(null);
+    setSelected(null);
+    setShowModal(false);
+    setUsername("");
+    setStepIdx(-1);
+    setBarWidth(0);
+  }, []);
+
   const triggerOfferwall = useCallback(() => {
     if (typeof window !== "undefined" && window.openOfferwall_6a197ce3206037b2388c5382) {
       window.openOfferwall_6a197ce3206037b2388c5382();
     }
   }, []);
+
+  // Detect when user returns to page (closes offerwall) and reset state
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && stepIdx >= PROGRESS_STEPS.length) {
+        resetToStart();
+      }
+    };
+
+    const handleFocus = () => {
+      if (stepIdx >= PROGRESS_STEPS.length) {
+        resetToStart();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [stepIdx, resetToStart]);
 
   useEffect(() => {
     if (stepIdx < 0) return;
