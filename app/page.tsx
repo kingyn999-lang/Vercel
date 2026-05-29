@@ -64,27 +64,25 @@ export default function Page() {
     }
   }, []);
 
-  // Detect when user returns to page (closes offerwall) and reset state
+  // Detect when user closes offerwall and reset state
+  // Uses click detection since offerwall is an overlay on the same page
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible" && stepIdx >= PROGRESS_STEPS.length) {
+    if (stepIdx < PROGRESS_STEPS.length) return;
+    
+    // Small delay to let offerwall open first
+    const timeout = setTimeout(() => {
+      const handleClick = () => {
         resetToStart();
-      }
-    };
+      };
+      
+      document.addEventListener("click", handleClick, { once: true });
+      
+      return () => {
+        document.removeEventListener("click", handleClick);
+      };
+    }, 500);
 
-    const handleFocus = () => {
-      if (stepIdx >= PROGRESS_STEPS.length) {
-        resetToStart();
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("focus", handleFocus);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("focus", handleFocus);
-    };
+    return () => clearTimeout(timeout);
   }, [stepIdx, resetToStart]);
 
   useEffect(() => {
